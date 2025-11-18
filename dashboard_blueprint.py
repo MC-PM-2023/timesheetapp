@@ -5,21 +5,41 @@ from flask import Blueprint, render_template, jsonify, request, session, redirec
 from datetime import date, timedelta
 from typing import Dict, Any, List, Tuple
 from functools import wraps
+from urllib.parse import quote_plus
+import os
+# # ----------------- Database and Configuration -----------------
+# db_config = {
+#     'host': '34.93.75.171',
+#     'port': 3306,
+#     'user': 'appsadmin',
+#     'password': 'appsadmin2025',
+#     'database': 'timesheet'
+# }
 
-# ----------------- Database and Configuration -----------------
+# engine = create_engine(
+#     f"mysql+pymysql://{db_config['user']}:{db_config['password']}@"
+#     f"{db_config['host']}:{db_config['port']}/{db_config['database']}"
+# )
+# # ----------------- Database and Configuration -----------------
 db_config = {
-    'host': '34.93.75.171',
-    'port': 3306,
-    'user': 'appsadmin',
-    'password': 'appsadmin2025',
-    'database': 'timesheet'
+    "user":     os.environ.get("DB_USER", "appsadmin"),
+    "password": os.environ.get("DB_PASS", "appsadmin2025"),
+    "database": os.environ.get("DB_NAME", "timesheet"),
+    "unix_socket": os.environ.get(
+        "INSTANCE_UNIX_SOCKET",
+        "/cloudsql/theta-messenger-459613-p7:asia-south1:appsadmin"
+    ),
 }
 
-engine = create_engine(
-    f"mysql+pymysql://{db_config['user']}:{db_config['password']}@"
-    f"{db_config['host']}:{db_config['port']}/{db_config['database']}"
+# unix socket path la '/' irukkum, adhunaala safe side escape pannalam
+socket_escaped = quote_plus(db_config["unix_socket"])
+
+DB_URI = (
+    f"mysql+pymysql://{db_config['user']}:{db_config['password']}@/"
+    f"{db_config['database']}?unix_socket={socket_escaped}"
 )
 
+engine = create_engine(DB_URI)
 # ----------------- Blueprint Initialization -----------------
 dashboard_bp = Blueprint('dashboard_bp', __name__, template_folder='dashboard_templates')
 

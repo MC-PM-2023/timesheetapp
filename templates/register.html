@@ -4,136 +4,210 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Register</title>
+<link rel="icon" href="https://storage.googleapis.com/my-react-image-bucket-123/DS_Logos/Logsy_Favicon.png" type="image/x-icon">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-image: url('https://storage.googleapis.com/my-react-image-bucket-123/Background25.jpg'); /* Adjust this path */ /* ✅ Update path to your image */
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
-      height: 100vh;
-      overflow: hidden;
+    }
+
+    /* ---------------- BACKGROUND ---------------- */
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, sans-serif;
+      min-height: 100vh;
       display: flex;
-      justify-content: center;
       align-items: center;
-      animation: fadeIn 1.2s ease-in;
+      justify-content: center;
+      background: url("https://storage.googleapis.com/my-react-image-bucket-123/Background25.jpg") 
+                  center/cover no-repeat fixed;
+      color: #e5e7eb;
     }
 
-    .container {
-      background: rgba(0, 0, 0, 0.7);
-      padding: 30px 25px;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
-      backdrop-filter: blur(6px);
-      border: 1px solid rgba(255, 204, 0, 0.4);
+    .auth-wrapper {
       width: 100%;
-      max-width: 400px;
-      text-align: center;
-      color: #fff;
-      animation: slideUp 1.3s ease-out;
+      max-width: 450px;
+      padding: 24px;
     }
 
-    h1 {
-      color: #ffcc00;
-      margin-bottom: 18px;
-      font-size: 28px;
-      text-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
+    .auth-card {
+      background: rgba(2, 6, 23, 0.82);
+      border-radius: 18px;
+      padding: 32px 32px 28px;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.75);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      backdrop-filter: blur(14px);
+    }
+
+    /* ---------------- LOGO ---------------- */
+    .logo-clean {
+      width: 58px;
+      height: 58px;
+      margin: 0 auto 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-clean img {
+      width: 58px;
+      height: 58px;
+      object-fit: contain;
+      border-radius: 50%;
+      background: transparent !important;
+    }
+
+    .auth-title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 600;
+      color: #f9fafb;
+      margin-bottom: 6px;
+    }
+
+    .auth-subtitle {
+      text-align: center;
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 22px;
     }
 
     form {
-      margin-top: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
 
     label {
-      font-size: 14px;
-      font-weight: bold;
-      display: block;
-      margin-bottom: 4px;
-      text-align: left;
-      color: #fff;
+      font-weight: 500;
+      color: #e5e7eb;
+      font-size: 13px;
     }
 
-    input[type="text"],
-    input[type="password"],
+    input,
     select {
       width: 100%;
-      padding: 10px;
-      margin-bottom: 14px;
-      border: 1px solid #555;
-      border-radius: 6px;
-      font-size: 14px;
-      background: rgba(255, 255, 255, 0.9);
-      color: #111;
-      transition: box-shadow 0.3s ease;
-    }
-
-    input[type="text"]:focus,
-    input[type="password"]:focus,
-    select:focus {
-      box-shadow: 0 0 6px #ffcc00;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      background: rgba(2, 6, 23, 0.60);
+      color: #e5e7eb;
+      font-size: 13px;
       outline: none;
+      transition: all 0.2s ease;
     }
 
-    input[type="submit"] {
-      background: #ffcc00;
-      color: #000;
-      padding: 12px 20px;
+    input:focus,
+    select:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.45);
+    }
+
+    .btn-submit {
+      margin-top: 6px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #f9fafb;
+      padding: 10px 16px;
+      border-radius: 999px;
       border: none;
-      border-radius: 6px;
-      font-size: 16px;
+      font-size: 14px;
+      font-weight: 500;
       cursor: pointer;
       width: 100%;
-      font-weight: bold;
-      transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+      transition: 0.15s ease;
+      box-shadow: 0 10px 25px rgba(129, 140, 248, 0.45);
     }
 
-    input[type="submit"]:hover {
-      background: #ffd700;
-      transform: scale(1.05);
-      box-shadow: 0 0 12px #ffcc00;
+    .btn-submit:hover {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+      box-shadow: 0 14px 32px rgba(129, 140, 248, 0.65);
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to   { opacity: 1; }
+    /* link below form */
+    .auth-footer {
+      text-align: center;
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 14px;
     }
 
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(40px); }
-      to   { opacity: 1; transform: translateY(0); }
+    .auth-footer a {
+      color: #6366f1;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .auth-footer a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
+
 <body>
-  <div class="container">
-    <h1>Register</h1>
+  <div class="auth-wrapper">
+    <div class="auth-card">
 
-    <form method="POST" action="/register">
-      <label for="username">Username:</label>
-      <input type="text" id="username" name="username" required>
+      <!-- LOGO -->
+      <div class="logo-clean">
+        <img 
+          src="https://storage.googleapis.com/my-react-image-bucket-123/DS_Logos/Logo_Favicon/Logsy_Favicon.png"
+          alt="Logo">
+      </div>
 
-      <label for="email">Email:</label>
-      <input type="text" id="email" name="email" required>
+      <h1 class="auth-title">Create your account</h1>
+      <p class="auth-subtitle">Fill the details to register.</p>
 
-      <label for="team">Select Your Team:</label>
-      <select id="team" name="team" required>
-        <option value="">-- Select Team --</option>
-        <option value="MCTeam">MCTeam</option>
-        <option value="IPTeam">IPTeam</option>
-        <option value="BDTeam">BDTeam</option>
-        <option value="BDTeam">AnalyticsTeam</option>
-      </select>
+      <!-- FORM -->
+      <form method="POST" action="/register">
 
-      <label for="password">Password:</label>
-      <input type="password" id="password" name="password" required>
+        <div class="field-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" required>
+        </div>
 
-      <label for="confirm_password">Re-enter Password:</label>
-      <input type="password" id="confirm_password" name="confirm_password" required>
+        <div class="field-group">
+          <label for="email">Email address</label>
+          <input type="text" id="email" name="email" required autocomplete="email">
+        </div>
 
-      <input type="submit" value="Register">
-    </form>
+        <div class="field-group">
+          <label for="team">Select Your Team</label>
+          <select id="team" name="team" required>
+            <option value="">-- Select Team --</option>
+            <option value="MCTeam">MCTeam</option>
+            <option value="IPTeam">IPTeam</option>
+            <option value="BDTeam">BDTeam</option>
+            <option value="AnalyticsTeam">AnalyticsTeam</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required>
+        </div>
+
+        <div class="field-group">
+          <label for="confirm_password">Re-enter Password</label>
+          <input type="password" id="confirm_password" name="confirm_password" required>
+        </div>
+
+        <button type="submit" class="btn-submit">Register</button>
+
+      </form>
+
+      <div class="auth-footer">
+        Already have an account? <a href="/login">Sign in</a>
+      </div>
+
+    </div>
   </div>
 </body>
 </html>

@@ -4,7 +4,7 @@
 
 # env_variables:
 #   SECRET_KEY: "change-me"
-#   DB_HOST: "34.93.75.171"
+#   DB_HOST: "10.19.64.3"
 #   DB_PORT: "3306"
 #   DB_NAME: "timesheet"
 #   DB_USER: "appsadmin"
@@ -27,6 +27,9 @@
 #   static_dir: static
 # - url: /.*
 #   script: auto
+
+
+
 runtime: python312
 service: default
 entrypoint: gunicorn -b :$PORT app:app
@@ -51,7 +54,7 @@ env_variables:
 automatic_scaling:
   target_cpu_utilization: 0.65
   min_instances: 0
-  max_instances: 2
+  max_instances: 1
 
 handlers:
 - url: /static
