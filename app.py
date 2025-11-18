@@ -82,70 +82,17 @@ import os
 # maybe_start_scheduler()
 
 # #__________________________App_dep_______________________________
-# app = Flask(__name__)
-
-# def refresh_data():
-#     print("Refreshing data @07:30 AM IST")
-#     # 👉 put your refresh logic here (DB update, cache clear, etc.)
-
-# def create_scheduler():
-#     from apscheduler.schedulers.background import BackgroundScheduler
-#     from apscheduler.triggers.cron import CronTrigger
-#     from pytz import timezone
-
-#     ist = timezone("Asia/Kolkata")
-#     sched = BackgroundScheduler(timezone=ist)
-#     # every day at 12:22 PM IST
-#     sched.add_job(refresh_data, CronTrigger(hour=12, minute=22, timezone=ist))
-#     sched.start()
-#     return sched
-
-# @app.route("/")
-# def landing():
-#     return render_template("landing.html")
-
-# # ── SECRET KEY ──────────────────────────────────────────────
-# app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
-
-# # ── DB CONFIG (Cloud SQL via Unix Socket) ───────────────────
-# DB_USER = os.environ.get("DB_USER", "appsadmin")
-# DB_PASS = os.environ.get("DB_PASS", "appsadmin2025")
-# DB_NAME = os.environ.get("DB_NAME", "timesheet")
-# INSTANCE_UNIX_SOCKET = os.environ.get(
-#     "INSTANCE_UNIX_SOCKET",
-#     "/cloudsql/theta-messenger-459613-p7:asia-south1:appsadmin"
-# )
-
-# # SQLAlchemy URI (pymysql + unix socket)
-# DB_URI = (
-#     f"mysql+pymysql://{DB_USER}:{DB_PASS}@/{DB_NAME}"
-#     f"?unix_socket={INSTANCE_UNIX_SOCKET}"
-# )
-
-# app.config["SQLALCHEMY_DATABASE_URI"] = DB_URI
-# app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-# db = SQLAlchemy(app)
-
-# # Flask-MySQLdb config (if you still use mysql.cursor())
-# app.config["MYSQL_USER"] = DB_USER
-# app.config["MYSQL_PASSWORD"] = DB_PASS
-# app.config["MYSQL_DB"] = DB_NAME
-# app.config["MYSQL_UNIX_SOCKET"] = INSTANCE_UNIX_SOCKET
-# mysql = MySQL(app)
-
-# # Raw engine (if you use create_engine anywhere)
-# engine = create_engine(DB_URI)
-# #__________________________App_dep________________________________
-
-# ── APP INIT ───────────────────────────────────────────────
 app = Flask(__name__)
 
-# ── SCHEDULER ─────────────────────────────────────────────
 def refresh_data():
     print("Refreshing data @07:30 AM IST")
     # 👉 put your refresh logic here (DB update, cache clear, etc.)
 
 def create_scheduler():
+    from apscheduler.schedulers.background import BackgroundScheduler
+    from apscheduler.triggers.cron import CronTrigger
+    from pytz import timezone
+
     ist = timezone("Asia/Kolkata")
     sched = BackgroundScheduler(timezone=ist)
     # every day at 12:22 PM IST
@@ -153,89 +100,142 @@ def create_scheduler():
     sched.start()
     return sched
 
-def maybe_start_scheduler():
-    """
-    Start background scheduler only in local/dev.
-    App Engine Standard doesn't guarantee background threads.
-    """
-    if not os.getenv("GAE_ENV"):  # means we're NOT on App Engine Standard
-        try:
-            create_scheduler()
-        except Exception as e:
-            app.logger.warning(f"Scheduler not started: {e}")
-
-# ── ROUTES ────────────────────────────────────────────────
 @app.route("/")
 def landing():
     return render_template("landing.html")
 
-# ── SECRET KEY ────────────────────────────────────────────
+# ── SECRET KEY ──────────────────────────────────────────────
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
 
-# ── DB CONFIG (dual: local TCP vs App Engine Unix socket) ─
+# ── DB CONFIG (Cloud SQL via Unix Socket) ───────────────────
 DB_USER = os.environ.get("DB_USER", "appsadmin")
 DB_PASS = os.environ.get("DB_PASS", "appsadmin2025")
 DB_NAME = os.environ.get("DB_NAME", "timesheet")
-
-# For local/dev (Windows): host + port
-DB_HOST = os.environ.get("DB_HOST", "34.93.75.171")  # or 127.0.0.1 if local MySQL
-DB_PORT = int(os.environ.get("DB_PORT", "3306"))
-
-# For App Engine: Cloud SQL Unix socket path
 INSTANCE_UNIX_SOCKET = os.environ.get(
     "INSTANCE_UNIX_SOCKET",
     "/cloudsql/theta-messenger-459613-p7:asia-south1:appsadmin"
 )
 
-# Decide which mode to use:
-# - If GAE_ENV is set → assume App Engine → use Unix socket
-# - Else → local/dev → use TCP (host:port)
-on_app_engine = bool(os.getenv("GAE_ENV"))
+# SQLAlchemy URI (pymysql + unix socket)
+DB_URI = (
+    f"mysql+pymysql://{DB_USER}:{DB_PASS}@/{DB_NAME}"
+    f"?unix_socket={INSTANCE_UNIX_SOCKET}"
+)
 
-if on_app_engine:
-    # ── App Engine: Unix socket ───────────────────────────
-    DB_URI = (
-        f"mysql+pymysql://{DB_USER}:{DB_PASS}@/{DB_NAME}"
-        f"?unix_socket={INSTANCE_UNIX_SOCKET}"
-    )
+app.config["SQLALCHEMY_DATABASE_URI"] = DB_URI
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db = SQLAlchemy(app)
 
-    app.config["SQLALCHEMY_DATABASE_URI"] = DB_URI
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    db = SQLAlchemy(app)
+# Flask-MySQLdb config (if you still use mysql.cursor())
+app.config["MYSQL_USER"] = DB_USER
+app.config["MYSQL_PASSWORD"] = DB_PASS
+app.config["MYSQL_DB"] = DB_NAME
+app.config["MYSQL_UNIX_SOCKET"] = INSTANCE_UNIX_SOCKET
+mysql = MySQL(app)
 
-    # Flask-MySQLdb via Unix socket
-    app.config["MYSQL_USER"] = DB_USER
-    app.config["MYSQL_PASSWORD"] = DB_PASS
-    app.config["MYSQL_DB"] = DB_NAME
-    app.config["MYSQL_UNIX_SOCKET"] = INSTANCE_UNIX_SOCKET
-    mysql = MySQL(app)
+# Raw engine (if you use create_engine anywhere)
+engine = create_engine(DB_URI)
+# #__________________________App_dep________________________________
 
-    # Raw engine using Unix socket
-    engine = create_engine(DB_URI)
+# # ── APP local ───────────────────────────────────────────────
+# app = Flask(__name__)
 
-else:
-    # ── Local / Windows: TCP connection (NO unix_socket) ──
-    DB_URI = (
-        f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-    )
+# # ── SCHEDULER ─────────────────────────────────────────────
+# def refresh_data():
+#     print("Refreshing data @07:30 AM IST")
+#     # 👉 put your refresh logic here (DB update, cache clear, etc.)
 
-    app.config["SQLALCHEMY_DATABASE_URI"] = DB_URI
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    db = SQLAlchemy(app)
+# def create_scheduler():
+#     ist = timezone("Asia/Kolkata")
+#     sched = BackgroundScheduler(timezone=ist)
+#     # every day at 12:22 PM IST
+#     sched.add_job(refresh_data, CronTrigger(hour=12, minute=22, timezone=ist))
+#     sched.start()
+#     return sched
 
-    # Flask-MySQLdb via host/port
-    app.config["MYSQL_HOST"] = DB_HOST
-    app.config["MYSQL_PORT"] = DB_PORT
-    app.config["MYSQL_USER"] = DB_USER
-    app.config["MYSQL_PASSWORD"] = DB_PASS
-    app.config["MYSQL_DB"] = DB_NAME
-    mysql = MySQL(app)
+# def maybe_start_scheduler():
+#     """
+#     Start background scheduler only in local/dev.
+#     App Engine Standard doesn't guarantee background threads.
+#     """
+#     if not os.getenv("GAE_ENV"):  # means we're NOT on App Engine Standard
+#         try:
+#             create_scheduler()
+#         except Exception as e:
+#             app.logger.warning(f"Scheduler not started: {e}")
 
-    # Raw engine using TCP – no AF_UNIX on Windows
-    engine = create_engine(DB_URI)
+# # ── ROUTES ────────────────────────────────────────────────
+# @app.route("/")
+# def landing():
+#     return render_template("landing.html")
 
-# ── START LOCAL SCHEDULER (only in dev) ───────────────────
-maybe_start_scheduler()
+# # ── SECRET KEY ────────────────────────────────────────────
+# app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
+
+# # ── DB CONFIG (dual: local TCP vs App Engine Unix socket) ─
+# DB_USER = os.environ.get("DB_USER", "appsadmin")
+# DB_PASS = os.environ.get("DB_PASS", "appsadmin2025")
+# DB_NAME = os.environ.get("DB_NAME", "timesheet")
+
+# # For local/dev (Windows): host + port
+# DB_HOST = os.environ.get("DB_HOST", "34.93.75.171")  # or 127.0.0.1 if local MySQL
+# DB_PORT = int(os.environ.get("DB_PORT", "3306"))
+
+# # For App Engine: Cloud SQL Unix socket path
+# INSTANCE_UNIX_SOCKET = os.environ.get(
+#     "INSTANCE_UNIX_SOCKET",
+#     "/cloudsql/theta-messenger-459613-p7:asia-south1:appsadmin"
+# )
+
+# # Decide which mode to use:
+# # - If GAE_ENV is set → assume App Engine → use Unix socket
+# # - Else → local/dev → use TCP (host:port)
+# on_app_engine = bool(os.getenv("GAE_ENV"))
+
+# if on_app_engine:
+#     # ── App Engine: Unix socket ───────────────────────────
+#     DB_URI = (
+#         f"mysql+pymysql://{DB_USER}:{DB_PASS}@/{DB_NAME}"
+#         f"?unix_socket={INSTANCE_UNIX_SOCKET}"
+#     )
+
+#     app.config["SQLALCHEMY_DATABASE_URI"] = DB_URI
+#     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+#     db = SQLAlchemy(app)
+
+#     # Flask-MySQLdb via Unix socket
+#     app.config["MYSQL_USER"] = DB_USER
+#     app.config["MYSQL_PASSWORD"] = DB_PASS
+#     app.config["MYSQL_DB"] = DB_NAME
+#     app.config["MYSQL_UNIX_SOCKET"] = INSTANCE_UNIX_SOCKET
+#     mysql = MySQL(app)
+
+#     # Raw engine using Unix socket
+#     engine = create_engine(DB_URI)
+
+# else:
+#     # ── Local / Windows: TCP connection (NO unix_socket) ──
+#     DB_URI = (
+#         f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+#     )
+
+#     app.config["SQLALCHEMY_DATABASE_URI"] = DB_URI
+#     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+#     db = SQLAlchemy(app)
+
+#     # Flask-MySQLdb via host/port
+#     app.config["MYSQL_HOST"] = DB_HOST
+#     app.config["MYSQL_PORT"] = DB_PORT
+#     app.config["MYSQL_USER"] = DB_USER
+#     app.config["MYSQL_PASSWORD"] = DB_PASS
+#     app.config["MYSQL_DB"] = DB_NAME
+#     mysql = MySQL(app)
+
+#     # Raw engine using TCP – no AF_UNIX on Windows
+#     engine = create_engine(DB_URI)
+
+# # ── START LOCAL SCHEDULER (only in dev) ───────────────────
+# maybe_start_scheduler()
 
 # ── SMTP CONFIG ─────────────────────────────────────────────
 SMTP_SERVER  = os.environ.get("SMTP_SERVER", "smtp.datasolve-analytics.com")
