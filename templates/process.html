@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Process Table Manager{% endblock %}
+{% block title %}Logsy - Process & Sub-Process{% endblock %}
 
 {% block content %}
 <style>
@@ -143,7 +143,7 @@ tr.editing td { background: #181b20; }
 </style>
 
 <div class="card">
-  <a href="/ff" class="back">&larr;&nbsp;Back&nbsp;to&nbsp;Dashboard</a>
+  <a href="/home" class="back">&larr;&nbsp;Back&nbsp;to&nbsp;Dashboard</a>
   <h1>Process & Sub-Process</h1>
 
   {% with messages = get_flashed_messages(with_categories=true) %}

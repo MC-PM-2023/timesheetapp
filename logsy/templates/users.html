@@ -135,7 +135,7 @@ body {
 </style>
 
 <div class="card">
-  <a href="/ff" class="back">&larr;&nbsp;Back&nbsp;to&nbsp;Dashboard</a>
+  <a href="/home" class="back">&larr;&nbsp;Back&nbsp;to&nbsp;Dashboard</a>
   <h1>User Management</h1>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
@@ -184,7 +184,7 @@ body {
               {% endif %}
             </td>
             <td>
-              <form method="POST" action="/admin/users" style="display:inline;">
+              <form method="POST" action="/admin/usermanagement" style="display:inline;">
                 <input type="hidden" name="uid" value="{{ u.id }}">
                 <select name="team">
                   {% for team in ['MCTeam','IPTeam','BDTeam','AnalyticsTeam','MRTeam'] %}

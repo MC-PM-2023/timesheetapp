@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-   <title>{% block title %}Logsy Analytics{% endblock %}</title>
+   <title>{% block title %}Logsy - Analytics{% endblock %}</title>
   <link rel="icon" href="https://storage.googleapis.com/my-react-image-bucket-123/DS_Logos/Logsy_Favicon.png" type="image/x-icon">
 
   <!-- Tailwind -->
@@ -766,7 +766,7 @@
     async function fetchData(start, end){
       setLoading(true);
       try{
-        const r = await fetch(`/dashboard/api/data?start=${start}&end=${end}`); 
+        const r = await fetch(`/admin/dashboard/api/data?start=${start}&end=${end}`); 
         const j = await r.json();
         if(r.status!==200 || j.error) throw new Error(j.error||'Server error');
         allData = j.details||[];

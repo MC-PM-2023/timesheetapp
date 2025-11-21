@@ -13,6 +13,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from pytz import timezone
+import MySQLdb
 # 🆕 Import the Blueprint from the new file
 from dashboard_blueprint import dashboard_bp 
 # ── CONFIG ────────────────────────────────────────────────────────────────
@@ -434,7 +435,7 @@ def login_required(f):
     @wraps(f)
     def _wrap(*a, **kw):
         if "username" not in session:  
-            return redirect("/login")
+            return redirect("/signin")
         return f(*a, **kw)
     return _wrap
 
@@ -446,7 +447,7 @@ def role_required(*roles):
             if user and user.role in roles:  
                 return f(*a, **kw)
             flash("⛔ Permission denied")
-            return redirect("/ff")
+            return redirect("/home")
         return _wrap
     return decorator
 
@@ -454,9 +455,9 @@ def send_otp(email, otp):
     msg = MIMEMultipart("alternative")
     msg["From"] = f"Logsy App <{WEBMAIL_USER}>"
     msg["To"]   = email
-    msg["Subject"] = "Logsy App Your OTP"
+    msg["Subject"] = "Logsy App – Your OTP Verification Code"
     plain = f"OTP: {otp}"
-    html  = f"<h3>Your Logsy App OTP is <b>{otp}</b></h3>"
+    html  = f"<h3>Your One-Time Password (OTP) for accessing the Logsy App is : [ <b>{otp}</b> ]</h3>"
     msg.attach(MIMEText(plain,"plain"))
     msg.attach(MIMEText(html,"html"))
     with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as s:
@@ -487,7 +488,7 @@ def get_visible_project_codes_for(user: User):
     ]
 
 # ── AUTH ROUTES ───────────────────────────────────────────────────────────
-@app.route("/register", methods=["GET", "POST"])
+@app.route("/signup", methods=["GET", "POST"])
 def register():
     err = None
     if request.method == "POST":
@@ -530,7 +531,7 @@ def verify():
             user.verification_code = None
             db.session.commit()
             session.pop("pending_email", None)
-            return redirect("/login")
+            return redirect("/signin")
         err = "Wrong OTP. Please try again."
     return render_template("verify.html", err=err)
 
@@ -573,10 +574,10 @@ def reset_password():
             db.session.commit()
             session.pop("reset_email", None)
             ok = "Password reset successful. Please log in."
-            return redirect("/login")
+            return redirect("/signin")
     return render_template("reset_password.html", err=err, ok=ok)
 
-@app.route("/login", methods=["GET","POST"])
+@app.route("/signin", methods=["GET","POST"])
 def login():
     if request.method=="POST":
         # 1. Form la irunthu 'email' field-a vangum (munadi 'username' irunthuchu)
@@ -598,7 +599,7 @@ def login():
             return redirect("/welcome")
             
         flash("Invalid creds / not verified")
-        return redirect("/login")
+        return redirect("/signin")
     
     return render_template("login.html")
 @app.route("/welcome")
@@ -617,7 +618,7 @@ from datetime import datetime
 def todatetime(value, fmt="%Y-%m-%d"):
     return datetime.strptime(value, fmt)
 # ── DASHBOARD ROUTE (dynamic) ─────────────────────────────────────────────
-# @app.route("/ff", methods=["GET"])
+# @app.route("/home", methods=["GET"])
 # @login_required
 # def dashboard():
 #     today = datetime.now().strftime("%Y-%m-%d")
@@ -685,7 +686,7 @@ from datetime import datetime, timedelta, date
 
 # ... (unga matha code) ...
 
-@app.route("/ff", methods=["GET"])
+@app.route("/home", methods=["GET"])
 @login_required
 def dashboard():
     today = datetime.now().strftime("%Y-%m-%d")
@@ -790,7 +791,7 @@ def process_master():
                  sub_process=p.sub_process) for p in ProcessTable.query.all()]
     return jsonify(data)
 
-@app.route("/admin/users", methods=["GET", "POST"])
+@app.route("/admin/usermanagement", methods=["GET", "POST"])
 @role_required("superadmin")
 def manage_users():
     if request.method == "POST":
@@ -830,7 +831,7 @@ def manage_users():
 
 
 ##############################################################################################
-@app.route("/admin/process", methods=["GET", "POST"])
+@app.route("/process&subprocess", methods=["GET", "POST"])
 @role_required("superadmin", "admin")  # super-admin & admin
 def manage_process():
     me = User.query.filter_by(username=session["username"]).first()
@@ -928,7 +929,7 @@ from datetime import date
 from datetime import date
 from flask import render_template, request, redirect, url_for, flash, jsonify
 
-@app.route("/admin/project-codes", methods=["GET", "POST"])
+@app.route("/allocations", methods=["GET", "POST"])
 @role_required("superadmin", "admin")
 def admin_project_codes():
     me = User.query.filter_by(username=session["username"]).first()
@@ -999,7 +1000,7 @@ def admin_project_codes():
 
 
 # 🆕 Admin: assign/unassign project codes to users (team-scoped)
-@app.route("/admin/assign-projects", methods=["GET", "POST"])
+@app.route("/assign-projects", methods=["GET", "POST"])
 @role_required("superadmin", "admin")
 def assign_projects():
     me = User.query.filter_by(username=session["username"]).first()
@@ -1189,7 +1190,7 @@ def parse_project_fields(team: str, project: str):
 #     allowed = {p["code"] for p in get_visible_project_codes_for(current_user)}
 #     if project not in allowed:
 #         flash("Selected project is not assigned to you or not WIP.", "error")
-#         return redirect("/ff")
+#         return redirect("/home")
 
 #     # Day from date
 #     day = datetime.strptime(date_str, "%Y-%m-%d").strftime("%A")
@@ -1223,7 +1224,7 @@ def parse_project_fields(team: str, project: str):
 #           proj_code, proj_type_mc, disease, country))
 #     mysql.connection.commit()
 #     cur.close()
-#     return redirect("/ff")
+#     return redirect("/home")
 # 💡 datetime-a import pannikonga (already irukum, just confirm pannikonga)
 from datetime import datetime, timedelta 
 
@@ -1250,7 +1251,7 @@ def start():
     allowed = {p["code"] for p in get_visible_project_codes_for(current_user)}
     if project not in allowed:
         flash("Selected project is not assigned to you or not WIP.", "error")
-        return redirect("/ff")
+        return redirect("/home")
 
     day = datetime.strptime(date_str, "%Y-%m-%d").strftime("%A")
 
@@ -1273,13 +1274,13 @@ def start():
         if overlap_count > 0:
             flash(f"Error: Time ({start_time} - {end_time}) overlaps or touches an existing entry. Please leave at least a 1-minute gap.", "error")
             cur.close()
-            return redirect("/ff")
+            return redirect("/home")
                 
     except Exception as e:
         app.logger.error(f"Error during start time validation: {e}")
         flash("An error occurred during time validation.", "error")
         cur.close()
-        return redirect("/ff")
+        return redirect("/home")
     # --- 🔚 END: 1-MIN GAP VALIDATION ---
 
 
@@ -1294,7 +1295,7 @@ def start():
     except ValueError:
         flash("Invalid time format for duration calculation.", "error")
         cur.close()
-        return redirect("/ff")
+        return redirect("/home")
 
     hours, remainder = divmod(seconds, 3600)
     minutes, _ = divmod(remainder, 60)
@@ -1322,7 +1323,7 @@ def start():
     finally:
         cur.close()
 
-    return redirect("/ff")
+    return redirect("/home")
 # ── UPDATE ENTRY ROUTE ─────────────────────────────────────────────────────
 from datetime import datetime
 from urllib.parse import urlparse
@@ -1703,7 +1704,7 @@ def update_entry():
 from math import ceil
 from datetime import datetime, timedelta, time
 
-# @app.route("/admin/team-logs", methods=["GET", "POST"])
+# @app.route("/team-logs", methods=["GET", "POST"])
 # @role_required("superadmin", "admin")
 # def view_team_logs():
 #     current_user = User.query.filter_by(username=session["username"]).first()
@@ -1824,7 +1825,7 @@ from math import ceil
 # UNGA APP.PY FILE-LA INTHA RENDU FUNCTION-UM IPPADI MAATHIKONGA
 #
 
-@app.route("/admin/team-logs", methods=["GET", "POST"])
+@app.route("/team-logs", methods=["GET", "POST"])
 @role_required("superadmin", "admin")
 def view_team_logs():
     current_user = User.query.filter_by(username=session["username"]).first()
@@ -2266,7 +2267,7 @@ def format_hours_minutes(hours):
     m = (total_seconds % 3600) // 60
     return f"{h:02d}:{m:02d}"
 
-@app.route("/admin/dashboard", methods=["GET", "POST"])
+@app.route("/admin/admin/dashboard", methods=["GET", "POST"])
 @role_required("superadmin", "admin")
 def admin_dashboard():
     current_user = User.query.filter_by(username=session["username"]).first()
@@ -3022,14 +3023,14 @@ def cancel_manual_timer():
     return jsonify({"success": True, "message": "Live entry canceled."})
 
 # ── BLUEPRINT REGISTRATION ────────────────────────────────────────────────
-# 🆕 Register the dashboard Blueprint under the /dashboard URL prefix
-app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
+# 🆕 Register the dashboard Blueprint under the /admin/dashboard URL prefix
+app.register_blueprint(dashboard_bp, url_prefix='/admin/dashboard')
 
 # ── MAIN ──────────────────────────────────────────────────────────────────
 # if __name__ == "__main__":
 #     promote_first_user()    # ensure tables + first user -> superadmin (once)
 #     # db.create_all() is already called inside promote_first_user
-#     # NOTE: The dashboard is now accessible at http://127.0.0.1:8003/dashboard/
+#     # NOTE: The dashboard is now accessible at http://127.0.0.1:8003/admin/dashboard/
 #     app.run(debug=True, port=8003)
 # app.py (END)
 if __name__ == "__main__":

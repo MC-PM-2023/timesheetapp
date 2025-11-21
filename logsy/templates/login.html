@@ -162,7 +162,7 @@
       <p class="error">{{ error }}</p>
     {% endif %}
 
-    <form method="POST" action="/login">
+    <form method="POST" action="/signin">
       <label for="username">Username:</label>
       <input type="text" id="username" name="username" required autocomplete="username" />
 
@@ -172,7 +172,7 @@
       <input type="submit" value="Login" />
     </form>
 
-    <p class="register-link">Don't have an account? <a href="/register">Register here</a>.</p>
+    <p class="register-link">Don't have an account? <a href="/signup">Register here</a>.</p>
     <p class="forgot-link"><a href="/forgot-password">Forgot Password?</a></p>
   </div>
 </body>

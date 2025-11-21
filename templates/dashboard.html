@@ -2063,7 +2063,7 @@ document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ closeModal(); 
 
             if (balanceSecs > 0) {
                 balanceEl.style.color = 'var(--danger)'; // Red for pending
-                messageEl.textContent = 'Inum ' + balanceText + ' compensate pannanum.';
+                messageEl.textContent = 'You still need to compensate ' + balanceText + '.';
                 messageEl.style.color = 'var(--danger)';
             } else if (balanceSecs < 0) {
                 balanceEl.style.color = 'var(--accent)'; // Green for surplus
